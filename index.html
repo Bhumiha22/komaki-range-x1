@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#070c14"><meta name="description" content="Komaki X1 automatic ride and battery companion">
+<link rel="manifest" href="./manifest.webmanifest"><title>Komaki Range Pro</title>
+<style>
+:root{color-scheme:dark;--bg:#070c14;--panel:#101a29;--panel2:#0b1421;--line:#26364c;--muted:#91a1b8;--txt:#f3f7fc;--cyan:#55d9e8;--green:#66e0a3;--amber:#ffd17b;--red:#ff8181}
+*{box-sizing:border-box}body{margin:0 auto;max-width:780px;padding:env(safe-area-inset-top) 15px calc(28px + env(safe-area-inset-bottom));background:radial-gradient(ellipse at 50% -18%,#1d3855 0%,var(--bg) 55%);color:var(--txt);font:15px system-ui,-apple-system,Segoe UI,sans-serif}
+header{display:flex;align-items:center;justify-content:space-between;padding:20px 2px 16px}.logo{font-size:13px;font-weight:900;letter-spacing:.14em}.logo em{font-style:normal;color:var(--cyan)}.pill{font-size:10px;border:1px solid var(--line);border-radius:99px;padding:7px 10px;color:var(--muted)}
+h1{font-size:28px;letter-spacing:-.05em;margin:7px 0 2px}.subtitle{font-size:12px;color:var(--muted);margin-bottom:15px}
+.card{background:linear-gradient(145deg,rgba(19,31,48,.98),rgba(11,19,31,.98));border:1px solid var(--line);border-radius:20px;padding:16px;margin:11px 0;box-shadow:0 12px 34px #0003}
+.topgrid,.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.metric{font-size:10px;color:var(--muted);letter-spacing:.13em;text-transform:uppercase}.big{font-size:43px;letter-spacing:-.065em;font-weight:800;margin:6px 0 0}.unit{font-size:14px;color:var(--muted);letter-spacing:0}.hint{font-size:11px;color:var(--muted);line-height:1.45}.bar{height:7px;border-radius:99px;background:#26364a;overflow:hidden;margin-top:13px}.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--green));transition:width .3s}
+button{border:0;border-radius:13px;padding:13px 12px;background:var(--cyan);color:#06121b;font-weight:850;font-size:12px;width:100%;cursor:pointer}button.alt{background:#1b2a3f;color:var(--txt);border:1px solid #334861}button.red{background:#3b202a;color:#ffb8b8;border:1px solid #68404b}.actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}
+.section{font-size:13px;font-weight:850;letter-spacing:.08em;margin:21px 2px 8px}.tile{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:12px}.val{font-size:21px;font-weight:750;margin-top:7px}.row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #202e42}.row:last-child{border:0}.muted{color:var(--muted);font-size:11px}.good{color:var(--green)}.warn{color:var(--amber)}.bad{color:var(--red)}
+.cells{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}.cell{background:#08111d;border:1px solid var(--line);border-radius:9px;padding:8px 1px;text-align:center}.cell b{display:block;font-size:11px}.cell small{font-size:9px;color:var(--muted)}
+.log{font:10px ui-monospace,monospace;white-space:pre-wrap;overflow:auto;max-height:170px;background:#070e18;border-radius:10px;padding:10px;color:#9fb2c9;overflow-wrap:anywhere}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:12px 0}.tab{padding:10px 3px;font-size:10px;background:#111d2d;color:#b8c7d9;border:1px solid var(--line)}.tab.active{background:#183448;color:#70e6ef;border-color:#397082}
+.panel{display:none}.panel.active{display:block}.historyitem{padding:10px 0;border-bottom:1px solid #243247}.historyitem:last-child{border:0}
+footer{text-align:center;color:#64748a;font-size:10px;padding:18px 0}
+@media(min-width:600px){body{padding-inline:24px}.big{font-size:50px}}
+</style></head><body>
+<header><div class="logo">KOMAKI <em>RANGE PRO</em></div><div class="pill" id="status">OFFLINE READY</div></header>
+<h1>Your scooter. Measured.</h1><div class="subtitle">Komaki X1 · automatic ride companion · data stored on this phone</div>
+
+<div class="card">
+ <div class="topgrid">
+  <div><div class="metric">Estimated remaining range</div><div class="big" id="range">—<span class="unit"> km</span></div><div class="hint" id="rangeNote">Waiting for valid BMS data</div></div>
+  <div><div class="metric">Battery charge</div><div class="big" id="soc">—<span class="unit"> %</span></div><div class="hint" id="bmsStatus">BMS not connected</div></div>
+ </div>
+ <div class="bar"><i id="socbar"></i></div>
+ <div class="actions"><button id="pair">CONNECT BATTERY</button><button class="alt" id="ride">START RIDE GPS</button></div>
+ <div class="hint" style="margin-top:10px">First Bluetooth connection is manual because Android requires your approval. GPS can start with the ride button. Reconnection is attempted automatically after permission is saved.</div>
+</div>
+
+<div class="tabs">
+ <button class="tab active" data-tab="live">LIVE</button><button class="tab" data-tab="ridepanel">RIDES</button><button class="tab" data-tab="chargepanel">CHARGING</button><button class="tab" data-tab="healthpanel">BATTERY</button>
+</div>
+
+<section class="panel active" id="live">
+ <div class="section">LIVE TELEMETRY</div><div class="grid">
+  <div class="tile"><div class="metric">Pack voltage</div><div class="val" id="voltage">— V</div></div>
+  <div class="tile"><div class="metric">Current</div><div class="val" id="current">— A</div></div>
+  <div class="tile"><div class="metric">Power</div><div class="val" id="power">— W</div></div>
+  <div class="tile"><div class="metric">GPS speed</div><div class="val" id="speed">0 km/h</div></div>
+  <div class="tile"><div class="metric">Trip distance</div><div class="val" id="trip">0.00 km</div></div>
+  <div class="tile"><div class="metric">GPS accuracy</div><div class="val" id="accuracy">—</div></div>
+ </div>
+ <div class="section">15-CELL MONITOR</div><div class="card"><div class="row"><span class="muted">Individual cell voltage</span><b id="cellstatus" class="warn">Protocol not decoded</b></div><div class="cells" id="cells"></div><p class="hint">Cell values are intentionally blank until the BMS frame format is confirmed. The app will not invent readings.</p></div>
+</section>
+
+<section class="panel" id="ridepanel">
+ <div class="section">RIDE SUMMARY</div><div class="grid">
+  <div class="tile"><div class="metric">Total distance</div><div class="val" id="totalDistance">0 km</div></div>
+  <div class="tile"><div class="metric">Saved rides</div><div class="val" id="rideCount">0</div></div>
+ </div>
+ <div class="section">RECENT RIDES</div><div class="card" id="ridesList"><div class="hint">No saved rides yet.</div></div>
+</section>
+
+<section class="panel" id="chargepanel">
+ <div class="section">CHARGING SESSIONS</div><div class="card">
+  <div class="row"><span class="muted">Charging detection</span><b id="chargeState">Waiting for BMS current</b></div>
+  <div class="row"><span class="muted">Last session</span><b id="lastCharge">—</b></div>
+  <p class="hint">Charging sessions will be detected automatically when valid BMS current and SOC data are available. No manual charge logging is required.</p>
+ </div>
+ <div class="section">CHARGE HISTORY</div><div class="card" id="chargeList"><div class="hint">No verified charging sessions.</div></div>
+</section>
+
+<section class="panel" id="healthpanel">
+ <div class="section">BATTERY HEALTH</div><div class="card">
+  <div class="row"><span class="muted">BMS device</span><b id="devname">Not paired</b></div>
+  <div class="row"><span class="muted">Bluetooth state</span><b id="conn">Disconnected</b></div>
+  <div class="row"><span class="muted">Cell count</span><b>15S expected</b></div>
+  <div class="row"><span class="muted">Cycle count</span><b id="cycles">—</b></div>
+  <div class="row"><span class="muted">Cell voltage spread</span><b id="spread">—</b></div>
+  <div class="row"><span class="muted">Last packet</span><b id="lastPacket">—</b></div>
+  <p class="hint">Health scores, imbalance warnings and cycle monitoring require decoded BMS values. No guessed battery-health percentage is shown.</p>
+  <div class="actions"><button class="alt" id="scan">INSPECT BLUETOOTH DATA</button><button class="red" id="clear">CLEAR LOCAL DATA</button></div>
+ </div>
+ <div class="section">TECHNICAL LOG</div><div class="card"><div class="log" id="log">App ready. Waiting for user-approved Bluetooth connection.</div></div>
+</section>
+<footer>OFFLINE-FIRST · LOCAL STORAGE · NO PACKDIAL DEPENDENCY</footer>
+
+<script>
+const $=id=>document.getElementById(id);
+const DB={device:null,server:null,watch:null,lastPos:null,tripM:0,rideStart:0,rideSamples:[],services:[],notify:[],soc:null,voltage:null,current:null,power:null,cellV:null,cycle:null,chargeStart:null,chargeLog:[]};
+const read=(k,d)=>{try{return JSON.parse(localStorage.getItem('krp_'+k))??d}catch{return d}};
+const write=(k,v)=>localStorage.setItem('krp_'+k,JSON.stringify(v));
+function log(t){$('log').textContent=new Date().toLocaleTimeString()+' '+t+'\\n'+$('log').textContent;$('log').textContent=$('log').textContent.slice(0,5000)}
+function setStatus(t){$('status').textContent=t}
+function render(){ $('soc').innerHTML=(DB.soc==null?'—':DB.soc.toFixed(0))+'<span class="unit"> %</span>';$('voltage').textContent=DB.voltage==null?'— V':DB.voltage.toFixed(2)+' V';$('current').textContent=DB.current==null?'— A':DB.current.toFixed(2)+' A';$('power').textContent=DB.power==null?'— W':DB.power.toFixed(0)+' W';$('socbar').style.width=(DB.soc==null?0:Math.max(0,Math.min(100,DB.soc)))+'%';$('bmsStatus').textContent=DB.soc==null?(DB.server?.connected?'Connected · decoder pending':'BMS not connected'):'Live BMS data';$('range').innerHTML='—<span class="unit"> km</span>';$('rangeNote').textContent='Range estimate requires verified SOC and measured energy use';$('trip').textContent=(DB.tripM/1000).toFixed(2)+' km';}
+function renderCells(){ $('cells').innerHTML=Array.from({length:15},(_,i)=>`<div class="cell"><small>CELL ${i+1}</small><b>${DB.cellV?.[i]!=null?DB.cellV[i].toFixed(3)+' V':'— V'}</b></div>`).join('')}
+function rides(){let a=read('rides',[]);$('rideCount').textContent=a.length;$('totalDistance').textContent=a.reduce((s,x)=>s+x.km,0).toFixed(1)+' km';$('ridesList').innerHTML=a.length?a.map(x=>`<div class="historyitem"><div class="row"><b>${x.km.toFixed(2)} km</b><span class="muted">${x.date}</span></div><div class="hint">${x.duration||'Ride saved'}</div></div>`).join(''):'<div class="hint">No saved rides yet.</div>'}
+function charges(){let a=read('charges',[]);$('chargeList').innerHTML=a.length?a.map(x=>`<div class="historyitem"><div class="row"><b>${x.start}</b><span>${x.end}</span></div><div class="hint">SOC ${x.from??'—'}% → ${x.to??'—'}%</div></div>`).join(''):'<div class="hint">No verified charging sessions.</div>'}
+function saveRide(){if(DB.tripM<40)return;let a=read('rides',[]);a.unshift({date:new Date().toLocaleString(),km:DB.tripM/1000,duration:DB.rideStart?Math.round((Date.now()-DB.rideStart)/60000)+' min':''});write('rides',a.slice(0,100));DB.tripM=0;DB.rideStart=0;DB.lastPos=null;rides();render()}
+function stopGPS(){if(DB.watch!==null){navigator.geolocation.clearWatch(DB.watch);DB.watch=null;saveRide();$('ride').textContent='START RIDE GPS';log('Ride GPS stopped; trip saved locally')}}
+function startGPS(){if(!navigator.geolocation){log('Geolocation unavailable');return}if(DB.watch!==null){stopGPS();return}DB.tripM=0;DB.rideStart=Date.now();DB.lastPos=null;DB.watch=navigator.geolocation.watchPosition(p=>{let c=p.coords;$('speed').textContent=((c.speed||0)*3.6).toFixed(1)+' km/h';$('accuracy').textContent=Math.round(c.accuracy)+' m';if(DB.lastPos){let r=6371000,rad=x=>x*Math.PI/180,dl=rad(c.latitude-DB.lastPos.lat),dn=rad(c.longitude-DB.lastPos.lon),q=Math.sin(dl/2)**2+Math.cos(rad(DB.lastPos.lat))*Math.cos(rad(c.latitude))*Math.sin(dn/2)**2,m=2*r*Math.asin(Math.sqrt(q));if(m>2&&m<120)DB.tripM+=m}DB.lastPos={lat:c.latitude,lon:c.longitude};render()},e=>log('GPS error: '+e.message),{enableHighAccuracy:true,maximumAge:1000,timeout:15000});$('ride').textContent='STOP & SAVE RIDE';log('GPS ride tracking started')}
+async function inspect(){if(!DB.server?.connected){log('Connect the BMS first');return}try{let sv=await DB.server.getPrimaryServices();log('Primary services: '+sv.length);for(let s of sv){log('SERVICE '+s.uuid);let cs=await s.getCharacteristics();for(let c of cs){let props=Object.keys(c.properties).filter(k=>c.properties[k]);log('CHAR '+c.uuid+' ['+props.join(',')+']');if(c.properties.read){try{let v=await c.readValue(),b=Array.from(new Uint8Array(v.buffer,v.byteOffset,v.byteLength));log('READ '+b.map(x=>x.toString(16).padStart(2,'0')).join(' '))}catch(e){log('READ ERR '+e.message)}}if(c.properties.notify||c.properties.indicate){try{await c.startNotifications();c.addEventListener('characteristicvaluechanged',e=>{let v=e.target.value,b=Array.from(new Uint8Array(v.buffer,v.byteOffset,v.byteLength));$('lastPacket').textContent=new Date().toLocaleTimeString();log('NOTIFY '+c.uuid+' '+b.map(x=>x.toString(16).padStart(2,'0')).join(' '));let packets=read('raw',[]);packets.push({uuid:c.uuid,bytes:b,at:Date.now()});write('raw',packets.slice(-250))})}catch(e){log('NOTIFY ERR '+e.message)}}}}}catch(e){log('GATT error: '+e.message+'; optional custom service UUIDs may be required')}}
+async function attach(d){DB.device=d;$('devname').textContent=d.name||'BLE device';try{DB.server=await d.gatt.connect();$('conn').textContent='Connected';$('bmsStatus').textContent='Connected · decoder pending';setStatus('BMS CONNECTED');log('Connected to '+(d.name||'unnamed device'));await inspect();if(DB.watch===null)startGPS()}catch(e){log('Connection failed: '+e.message)}d.addEventListener('gattserverdisconnected',()=>{$('conn').textContent='Disconnected';setStatus('READY');log('BMS disconnected')})}
+async function pair(){if(!navigator.bluetooth){alert('Bluetooth Web API unavailable. Use Chrome on Android over HTTPS.');return}try{let d=await navigator.bluetooth.requestDevice({acceptAllDevices:true,optionalServices:['battery_service','device_information']});await attach(d);write('deviceName',d.name||'')}catch(e){log('Bluetooth pairing: '+e.message)}}
+async function reconnect(){if(!navigator.bluetooth?.getDevices)return;try{let ds=await navigator.bluetooth.getDevices(),n=read('deviceName',''),d=ds.find(x=>x.name===n)||ds[0];if(d){log('Reconnecting to previously approved BMS');await attach(d)}}catch(e){log('Automatic reconnection not available: '+e.message)}}
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.id===b.dataset.tab))});
+$('pair').onclick=pair;$('ride').onclick=()=>DB.watch===null?startGPS():stopGPS();$('scan').onclick=inspect;$('clear').onclick=()=>{if(confirm('Delete all locally saved ride, charge and raw Bluetooth history?')){['rides','charges','raw'].forEach(k=>localStorage.removeItem('krp_'+k));rides();charges();log('Local data cleared')}};renderCells();render();rides();charges();if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').then(()=>log('Offline cache ready')).catch(e=>log('Service worker: '+e.message)));reconnect();
+</script></body></html>
